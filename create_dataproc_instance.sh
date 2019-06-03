@@ -93,7 +93,7 @@ function createSomething() {
             --num-workers 2 \
             --worker-machine-type n1-standard-2 --worker-boot-disk-size 100GB \
             --scopes sql-admin \
-            --initialization-actions "gs://dataproc-initialization-actions/cloud-sql-proxy/cloud-sql-proxy.sh,gs://spark-datasulting-warehouse/utils/initSerde.sh" \
+            --initialization-actions "gs://dataproc-initialization-actions/cloud-sql-proxy/cloud-sql-proxy.sh,gs://spark-datasulting-warehouse/utils/init_dataproc_node.sh" \
             --properties "hive:hive.metastore.warehouse.dir=${bucket_location}/datasets" \
             --metadata "hive-metastore-instance=${project}:${region}:${sql_instance_name},python-modules=${python_modules},jar-modules=${jar_modules}" \
             --expiration-time "$(date +%Y-%m-%d)T19"
@@ -115,7 +115,7 @@ function eraseSomething() {
         read -p "Are you sure to remove the sql instance ${sql_instance_name}? " -n 1 -r
         echo
         if [[ ${REPLY} =~ ^[Yy]$ ]]; then
-            gcloud sql instances delete ${SQL_INSTANCE_NAME} --quiet
+            gcloud sql instances delete ${sql_instance_name} --quiet
         fi
     fi
 
