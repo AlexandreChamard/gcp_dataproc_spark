@@ -2,6 +2,7 @@
 
 readonly jar_modules=$(/usr/share/google/get_metadata_value attributes/jar-modules)
 readonly python_modules=$(/usr/share/google/get_metadata_value attributes/python-modules)
+readonly spacy_modules=$(/usr/share/google/get_metadata_value attributes/spacy-modules)
 
 if [[ -n ${jar_modules} ]]; then
     readonly auxlib="/usr/lib/hive/auxlib"
@@ -22,4 +23,8 @@ fi
 
 if [[ -n ${python_modules} ]]; then
     $(which conda) install ${python_modules}
+fi
+
+if [[ -n ${spacy_modules} ]]; then
+    python -m spacy download ${spacy_modules}
 fi

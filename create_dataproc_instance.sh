@@ -10,8 +10,9 @@ readonly project=$(gcloud info --format='value(config.project)')
 readonly bucket_name="${project}-warehouse"
 readonly bucket_location="gs://${bucket_name}"
 
-readonly python_modules="numpy pandas scipy"
+readonly python_modules="numpy pandas scipy spacy nltk"
 readonly jar_modules="${bucket_location}/jars/*.jar"
+readonly spacy_modules="fr_core_news_sm"
 
 function parseArguments() {
     while [[ $# -gt 0 ]]; do
@@ -33,6 +34,10 @@ function parseArguments() {
             --erase-bucket)
             erase_bucket=true
             erase=true
+            shift
+            ;;
+            --install)
+            install=true
             shift
             ;;
             *)
@@ -95,7 +100,7 @@ function createSomething() {
             --scopes sql-admin \
             --initialization-actions "gs://dataproc-initialization-actions/cloud-sql-proxy/cloud-sql-proxy.sh,gs://spark-datasulting-warehouse/utils/init_dataproc_node.sh" \
             --properties "hive:hive.metastore.warehouse.dir=${bucket_location}/datasets" \
-            --metadata "hive-metastore-instance=${project}:${region}:${sql_instance_name},python-modules=${python_modules},jar-modules=${jar_modules}" \
+            --metadata "hive-metastore-instance=${project}:${region}:${sql_instance_name},python-modules=${python_modules},jar-modules=${jar_modules},spacy-modules=${spacy_modules}" \
             --expiration-time "$(date +%Y-%m-%d)T19"
     else
         echo "dataproc cluster ${cluster_name} already exist."
@@ -107,7 +112,7 @@ function eraseSomething() {
         read -p "Are you sure to remove the dataproc cluster ${cluster_name}? " -n 1 -r
         echo
         if [[ ${REPLY} =~ ^[Yy]$ ]]; then
-            gcloud dataproc clusters delete ${cluster_name} --quiet
+            gcloud dataproc clusters delete ${cluster_name} --region ${region} --quiet
         fi
     fi
 
@@ -131,9 +136,12 @@ function eraseSomething() {
 function main() {
     parseArguments $@
     if [[ ${help} ]]; then
-        echo "USAGE : $0 [ -h|--help ] [ --erase-cluster ] [ --erase-sql ] [ --erase-bucket ]"
+        echo "USAGE : $0 [ -h|--help ] [ --erase-cluster ] [ --erase-sql ] [ --erase-bucket ] [ --install ]"
     elif [[ ${erase} ]]; then
         eraseSomething
+        if [[ ${install} ]]; then
+            createSomething
+        fi
     else
         createSomething
     fi
